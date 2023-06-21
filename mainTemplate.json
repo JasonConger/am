@@ -262,7 +262,7 @@
         },
         "resources": [
           {
-            "apiVersion": "2019-07-01",
+            "apiVersion": "2020-12-01",
             "type": "extensions",
             "name": "config-app",
             "location": "[parameters('location')]",
@@ -272,11 +272,11 @@
             "properties": {
               "publisher": "Microsoft.Azure.Extensions",
               "type": "CustomScript",
-              "typeHandlerVersion": "2.1",
+              "typeHandlerVersion": "2.0",
               "autoUpgradeMinorVersion": true,
               "settings": {
                 "fileUris": [
-                  "[uri(parameters('_artifactsLocation'), concat('scripts/hello.sh', parameters('_artifactsLocationSasToken')))]"
+                  "[uri(parameters('_artifactsLocation'), concat('scripts/configure.sh', parameters('_artifactsLocationSasToken')))]"
                 ]
               },
               "protectedSettings": {
