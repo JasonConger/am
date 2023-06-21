@@ -86,7 +86,7 @@
       "vnetAddressPrefix": "10.0.0.0/16",
       "subnetPrefix": "10.0.0.0/24",
       "licenseManagerPipId": {
-        "id": "[if(parameters('licenseManagerPip'), resourceId('Microsoft.Network/publicIPAddresses', 'licensemanager'), json('null'))]"
+        "id": "[if(parameters('licenseManagerPip'), resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')), json('null'))]"
       },
       "linuxConfiguration": {
         "disablePasswordAuthentication": true,
@@ -162,7 +162,7 @@
         "properties": {
           "publicIPAllocationMethod": "Static",
           "dnsSettings": {
-            "domainNameLabel": "[concat('splunk-lm-', variables('resgpguid'))]"
+            "domainNameLabel": "[concat(variables('scenarioPrefix'), variables('resgpguid'))]"
           }
         }
       },
