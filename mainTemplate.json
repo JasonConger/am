@@ -275,10 +275,12 @@
               "typeHandlerVersion": "2.1",
               "autoUpgradeMinorVersion": true,
               "settings": {
-                "fileUris": [ "[variables('installScriptPath')]" ]
+                "fileUris": [
+                  "[uri(parameters('_artifactsLocation'), concat('scripts/hello.sh', parameters('_artifactsLocationSasToken')))]"
+                ]
               },
               "protectedSettings": {
-                "commandToExecute": "[concat('sudo bash install.sh --role license-master --splunk-url \"', variables('splunkDownload'), '\" --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'), ' --conf-url ', variables('configPath') )]"
+                "commandToExecute": "[concat('sudo bash scripts/configure.sh --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]"
               }
             }
           }
