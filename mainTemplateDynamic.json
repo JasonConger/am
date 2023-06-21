@@ -73,7 +73,7 @@
         "metadata": {
           "description": "URL for Splunk Enterprise .tgz file"
         }
-      },
+      }
     },
     "variables": {
       "scenarioPrefix": "splunk-lm-",
