@@ -1,0 +1,287 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": {
+        "defaultValue": "[resourceGroup().location]",
+        "type": "string",
+        "metadata": {
+          "description": "Azure region for deployed Splunk resources"
+        }
+      },
+      "linuxUserName": {
+        "type": "string",
+        "defaultValue": "splunkadmin",
+        "metadata": {
+          "description": "User name for linux VMs"
+        }
+      },
+      "authenticationType": {
+        "type": "string",
+        "defaultValue": "sshPublicKey",
+        "allowedValues": [
+          "sshPublicKey",
+          "password"
+        ],
+        "metadata": {
+          "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
+        }
+      },
+      "linuxPasswordOrKey": {
+        "type": "securestring",
+        "metadata": {
+          "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
+        }
+      },
+      "splunkUser": {
+        "type": "string",
+        "defaultValue": "admin",
+        "metadata": {
+          "description": "Splunk user name to use during Splunk install"
+        }
+      },
+      "splunkPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "Splunk password to use during Splunk install"
+        }
+      },
+      "licenseManagerPip": {
+        "type": "bool",
+        "defaultValue": false,
+        "metadata": {
+          "description": "Attach public IP to License Manager VM"
+        }
+      },
+      "_artifactsLocation": {
+            "type": "string",
+            "defaultValue": "[deployment().properties.templateLink.uri]",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located including a trailing '/'"
+            }
+      },
+      "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated.  Use the defaultValue if the staging location is not secured."
+            }
+        }
+    },
+    "variables": {
+      "scenarioPrefix": "splunk-lm-",
+      "imagePublisher": "Canonical",
+      "imageOffer": "UbuntuServer",
+      "imageSku": "18.04-LTS",
+      "imageVersion": "latest",
+      "resgpguid": "[substring(replace(guid(resourceGroup().id), '-', ''), 0, 4)]",
+      "vmName": "[concat(variables('scenarioPrefix'),'vm')]",
+      "commandToExecute": "[concat('sudo bash install.sh  --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]",
+      "vmSize": "Standard_D2s_v3",
+      "nsgName": "[concat(variables('scenarioPrefix'),'nsg')]",
+      "nicName": "[concat(variables('scenarioPrefix'),'nic')]",
+      "subnetName": "[concat(variables('scenarioPrefix'),'subnet')]",
+      "publicIPAddressName": "[concat(variables('scenarioPrefix'),'publicIp')]",
+      "virtualNetworkName": "[concat(variables('scenarioPrefix'),'vnet')]",
+      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+      "vnetAddressPrefix": "10.0.0.0/16",
+      "subnetPrefix": "10.0.0.0/24",
+      "licenseManagerPipId": {
+        "id": "[if(parameters('licenseManagerPip'), resourceId('Microsoft.Network/publicIPAddresses', 'licensemanager'), json('null'))]"
+      },
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": true,
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[concat('/home/', parameters('linuxUserName'), '/.ssh/authorized_keys')]",
+              "keyData": "[parameters('linuxPasswordOrKey')]"
+            }
+          ]
+        }
+      }
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "apiVersion": "2022-05-01",
+        "name": "splunk-nsg",
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            {
+              "name": "Port_8000",
+              "properties": {
+                "description": "Access to Splunk Web",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "8000",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Port_8089",
+              "properties": {
+                "description": "Access to Splunk management port",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "8089",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 125,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Port_22",
+              "properties": {
+                "description": "SSH access to VMs",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "22",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 200,
+                "direction": "Inbound"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "apiVersion": "2020-08-01",
+        "type": "Microsoft.Network/publicIPAddresses",
+        "condition": "[parameters('licenseManagerPip')]",
+        "name": "[variables('publicIPAddressName')]",
+        "location": "[parameters('location')]",
+        "properties": {
+          "publicIPAllocationMethod": "Static",
+          "dnsSettings": {
+            "domainNameLabel": "[concat('splunk-lm-', variables('resgpguid'))]"
+          }
+        }
+      },
+      {
+        "apiVersion": "2022-05-01",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[variables('virtualNetworkName')]",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+        ],
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": "[variables('vnetAddressPrefix')]"
+          },
+          "subnets": [
+            {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              }
+            }
+          }
+          ]
+        }
+      },
+      {
+        "apiVersion": "2022-05-01",
+        "type": "Microsoft.Network/networkInterfaces",
+        "name": "[variables('nicName')]",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+          "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "privateIPAllocationMethod": "Dynamic",
+                "publicIPAddress": "[if(parameters('licenseManagerPip'), variables('licenseManagerPipId'), json('null'))]",
+                "subnet": {
+                  "id": "[variables('subnetRef')]"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "apiVersion": "2022-03-01",
+        "name": "[variables('vmName')]",
+        "type": "Microsoft.Compute/virtualMachines",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        ],
+        "properties": {
+          "hardwareProfile": {
+            "vmSize": "[variables('vmSize')]"
+          },
+          "osProfile": {
+            "computerName": "[variables('vmName')]",
+            "adminUsername": "[parameters('linuxUserName')]",
+            "adminPassword": "[parameters('linuxPasswordOrKey')]",
+            "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[variables('imagePublisher')]",
+              "offer": "[variables('imageOffer')]",
+              "sku": "[variables('imageSku')]",
+              "version": "[variables('imageVersion')]"
+            },
+            "osDisk": {
+              "caching": "ReadWrite",
+              "createOption": "FromImage",
+              "diskSizeGB": 64,
+              "osType": "Linux",
+              "managedDisk": {
+                "storageAccountType": "StandardSSD_LRS"
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+              }
+            ]
+          }
+        },
+        "resources": [
+          {
+            "apiVersion": "2019-07-01",
+            "type": "extensions",
+            "name": "config-app",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+              "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+            ],
+            "properties": {
+              "publisher": "Microsoft.Azure.Extensions",
+              "type": "CustomScript",
+              "typeHandlerVersion": "2.1",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "fileUris": [ "[variables('installScriptPath')]" ]
+              },
+              "protectedSettings": {
+                "commandToExecute": "[concat('sudo bash install.sh --role license-master --splunk-url \"', variables('splunkDownload'), '\" --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'), ' --conf-url ', variables('configPath') )]"
+              }
+            }
+          }
+        ]
+      }
+    ]
+}
