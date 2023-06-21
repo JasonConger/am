@@ -66,7 +66,7 @@
             "metadata": {
                 "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated.  Use the defaultValue if the staging location is not secured."
             }
-        },
+      },
       "splunkBlobUrl": {
         "type": "string",
         "defaultValue": "https://download.splunk.com/products/splunk/releases/9.0.5/linux/splunk-9.0.5-e9494146ae5c-Linux-x86_64.tgz",
