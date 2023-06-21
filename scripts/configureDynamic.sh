@@ -3,10 +3,8 @@
 # Licensed under the MIT License.
 
 # Set script variables
-#SPLUNKHOME=/opt/splunk
-SPLUNKHOME=/home
-#SPLUNKLOCAL=$SPLUNKHOME/etc/system/local
-SPLUNKLOCAL=$SPLUNKHOME
+SPLUNKHOME=/opt/splunk
+SPLUNKLOCAL=$SPLUNKHOME/etc/system/local
 
 # Parse command-line options
 
