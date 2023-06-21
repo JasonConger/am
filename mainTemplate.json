@@ -176,7 +176,9 @@
         ],
         "properties": {
           "addressSpace": {
-            "addressPrefixes": "[variables('vnetAddressPrefix')]"
+            "addressPrefixes": [
+              "[variables('vnetAddressPrefix')]"
+            ]
           },
           "subnets": [
             {
