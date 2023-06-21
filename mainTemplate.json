@@ -262,7 +262,7 @@
         },
         "resources": [
           {
-            "apiVersion": "2020-12-01",
+            "apiVersion": "2020-06-01",
             "type": "extensions",
             "name": "config-app",
             "location": "[parameters('location')]",
@@ -280,7 +280,7 @@
                 ]
               },
               "protectedSettings": {
-                "commandToExecute": "[concat('sudo bash scripts/configure.sh --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]"
+                "commandToExecute": "[concat('sudo bash configure.sh --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]"
               }
             }
           }
