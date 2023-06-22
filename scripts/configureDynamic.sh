@@ -51,8 +51,8 @@ echo "SPLUNKURL = $SPLUNKURL"
 echo "SPLUNKUSER = $SPLUNKUSER"
 
 # Download and extract Splunk Enterprise
-wget -nv -O splunk.tgz "$SPLUNKURL"
-tar xzf splunk.tgz -C /opt
+# wget -nv -O splunk.tgz "$SPLUNKURL"
+tar xzf splunk-9.0.5-Linux-x86_64.tgz -C /opt
 
 # Create user-seed.conf
 echo "[user_info]" >> $SPLUNKLOCAL/user-seed.conf

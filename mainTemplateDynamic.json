@@ -13,7 +13,7 @@
         "type": "string",
         "defaultValue": "splunkadmin",
         "metadata": {
-          "description": "User name for linux VMs"
+          "description": "Linux admin username for the Virtual Machine"
         }
       },
       "authenticationType": {
@@ -33,6 +33,157 @@
           "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
         }
       },
+        "vmName": {
+        "type": "string",
+        "defaultValue": "splunk-lm-vm",
+        "metadata": {
+          "description": "Name for the Virtual Machine."
+        }
+      },
+      "vmSize": {
+        "type": "string",
+        "defaultValue": "Standard_D2s_v3",
+        "metadata": {
+          "description": "Size for the Virtual Machine."
+        }
+      },
+      "storageNewOrExisting": {
+        "type": "string",
+        "defaultValue": "new",
+        "allowedValues": [
+          "new",
+          "existing"
+        ],
+        "metadata": {
+          "description": "Determines whether or not a new storage account should be provisioned."
+        }
+      },
+      "storageAccountName": {
+        "type": "string",
+        "defaultValue": "[concat('storage', uniqueString(resourceGroup().id))]",
+        "metadata": {
+          "description": "Name of the storage account"
+        }
+      },
+      "storageAccountType": {
+        "type": "string",
+        "defaultValue": "Standard_LRS",
+        "metadata": {
+          "description": "Storage account type"
+        }
+      },
+      "storageAccountResourceGroupName": {
+        "type": "string",
+        "defaultValue": "[resourceGroup().name]",
+        "metadata": {
+          "description": "Name of the resource group for the existing storage account"
+        }
+      },
+      "virtualNetworkNewOrExisting": {
+        "type": "string",
+        "defaultValue": "new",
+        "allowedValues": [
+          "new",
+          "existing"
+        ],
+        "metadata": {
+          "description": "Determines whether or not a new virtual network should be provisioned."
+        }
+      },
+      "virtualNetworkName": {
+        "type": "string",
+        "defaultValue": "VirtualNetwork",
+        "metadata": {
+          "description": "Name of the virtual network"
+        }
+      },
+      "addressPrefixes": {
+        "type": "array",
+        "defaultValue": [
+          "10.0.0.0/16"
+        ],
+        "metadata": {
+          "description": "Address prefix of the virtual network"
+        }
+      },
+      "subnetName": {
+        "type": "string",
+        "defaultValue": "default",
+        "metadata": {
+          "description": "Name of the subnet"
+        }
+      },
+      "subnetPrefix": {
+        "type": "string",
+        "defaultValue": "10.0.0.0/24",
+        "metadata": {
+          "description": "Subnet prefix of the virtual network"
+        }
+      },
+      "virtualNetworkResourceGroupName": {
+        "type": "string",
+        "defaultValue": "[resourceGroup().name]",
+        "metadata": {
+          "description": "Name of the resource group for the existing virtual network"
+        }
+      },
+      "publicIpNewOrExisting": {
+        "type": "string",
+        "defaultValue": "new",
+        "allowedValues": [
+          "none",
+          "new",
+          "existing"
+        ],
+        "metadata": {
+          "description": "Determines whether or not a new public ip should be provisioned."
+        }
+      },
+      "publicIpName": {
+        "type": "string",
+        "defaultValue": "PublicIp",
+        "metadata": {
+          "description": "Name of the public ip address"
+        }
+      },
+      "publicIpDns": {
+        "type": "string",
+        "defaultValue": "[concat('linux-vm-', uniqueString(resourceGroup().id))]",
+        "metadata": {
+          "description": "DNS of the public ip address for the VM"
+        }
+      },
+      "publicIpResourceGroupName": {
+        "type": "string",
+        "defaultValue": "[resourceGroup().name]",
+        "metadata": {
+          "description": "Name of the resource group for the public ip address"
+        }
+      },
+      "publicIpAllocationMethod": {
+        "type": "string",
+        "defaultValue": "Static",
+        "allowedValues": [
+          "Dynamic",
+          "Static",
+          ""
+        ],
+        "metadata": {
+          "description": "Allocation method for the public ip address"
+        }
+      },
+      "publicIpSku": {
+        "type": "string",
+        "defaultValue": "Basic",
+        "allowedValues": [
+          "Basic",
+          "Standard",
+          ""
+        ],
+        "metadata": {
+          "description": "Name of the resource group for the public ip address"
+        }
+      },
       "splunkUser": {
         "type": "string",
         "defaultValue": "admin",
@@ -44,13 +195,6 @@
         "type": "securestring",
         "metadata": {
           "description": "Splunk password to use during Splunk install"
-        }
-      },
-      "licenseManagerPip": {
-        "type": "bool",
-        "defaultValue": false,
-        "metadata": {
-          "description": "Attach public IP to License Manager VM"
         }
       },
       "_artifactsLocation": {
@@ -66,14 +210,7 @@
             "metadata": {
                 "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated.  Use the defaultValue if the staging location is not secured."
             }
-      },
-      "splunkBlobUrl": {
-        "type": "string",
-        "defaultValue": "https://download.splunk.com/products/splunk/releases/9.0.5/linux/splunk-9.0.5-e9494146ae5c-Linux-x86_64.tgz",
-        "metadata": {
-          "description": "URL for Splunk Enterprise .tgz file"
         }
-      }
     },
     "variables": {
       "scenarioPrefix": "splunk-lm-",
@@ -81,20 +218,8 @@
       "imageOffer": "UbuntuServer",
       "imageSku": "18.04-LTS",
       "imageVersion": "latest",
-      "resgpguid": "[substring(replace(guid(resourceGroup().id), '-', ''), 0, 4)]",
-      "vmName": "[concat(variables('scenarioPrefix'),'vm')]",
-      "vmSize": "Standard_D2s_v3",
       "nsgName": "[concat(variables('scenarioPrefix'),'nsg')]",
       "nicName": "[concat(variables('scenarioPrefix'),'nic')]",
-      "subnetName": "[concat(variables('scenarioPrefix'),'subnet')]",
-      "publicIPAddressName": "[concat(variables('scenarioPrefix'),'publicIp')]",
-      "virtualNetworkName": "[concat(variables('scenarioPrefix'),'vnet')]",
-      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-      "vnetAddressPrefix": "10.0.0.0/16",
-      "subnetPrefix": "10.0.0.0/24",
-      "licenseManagerPipId": {
-        "id": "[if(parameters('licenseManagerPip'), resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')), json('null'))]"
-      },
       "linuxConfiguration": {
         "disablePasswordAuthentication": true,
         "ssh": {
@@ -105,6 +230,9 @@
             }
           ]
         }
+      },
+        "publicIpAddressId": {
+        "id": "[resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
       }
     },
     "resources": [
@@ -161,53 +289,61 @@
         }
       },
       {
-        "apiVersion": "2020-08-01",
-        "type": "Microsoft.Network/publicIPAddresses",
-        "condition": "[parameters('licenseManagerPip')]",
-        "name": "[variables('publicIPAddressName')]",
+        "condition": "[equals(parameters('storageNewOrExisting'), 'new')]",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2019-06-01",
+        "name": "[parameters('storageAccountName')]",
         "location": "[parameters('location')]",
+        "kind": "Storage",
+        "sku": {
+          "name": "[parameters('storageAccountType')]"
+        }
+      },
+      {
+        "type": "Microsoft.Network/publicIPAddresses",
+        "condition": "[equals(parameters('publicIpNewOrExisting'), 'new')]",
+        "apiVersion": "2020-05-01",
+        "name": "[parameters('publicIpName')]",
+        "location": "[parameters('location')]",
+        "sku": {
+          "name": "[parameters('publicIpSku')]"
+        },    
         "properties": {
-          "publicIPAllocationMethod": "Static",
+          "publicIPAllocationMethod": "[parameters('publicIpAllocationMethod')]",
           "dnsSettings": {
-            "domainNameLabel": "[concat(variables('scenarioPrefix'), variables('resgpguid'))]"
+            "domainNameLabel": "[parameters('publicIpDns')]"
           }
         }
       },
       {
-        "apiVersion": "2022-05-01",
         "type": "Microsoft.Network/virtualNetworks",
-        "name": "[variables('virtualNetworkName')]",
+        "condition": "[equals(parameters('virtualNetworkNewOrExisting'), 'new')]",
+        "apiVersion": "2020-05-01",
+        "name": "[parameters('virtualNetworkName')]",
         "location": "[parameters('location')]",
-        "dependsOn": [
-          "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
-        ],
         "properties": {
           "addressSpace": {
-            "addressPrefixes": [
-              "[variables('vnetAddressPrefix')]"
-            ]
+            "addressPrefixes": "[parameters('addressPrefixes')]"
           },
           "subnets": [
             {
-            "name": "[variables('subnetName')]",
-            "properties": {
-              "addressPrefix": "[variables('subnetPrefix')]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              "name": "[parameters('subnetName')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnetPrefix')]"
               }
             }
-          }
           ]
         }
       },
       {
-        "apiVersion": "2022-05-01",
         "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2020-05-01",
         "name": "[variables('nicName')]",
         "location": "[parameters('location')]",
         "dependsOn": [
-          "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-          "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+          "[parameters('publicIpName')]",
+          "[parameters('virtualNetworkName')]",
+          "[variables('nsgName')]"
         ],
         "properties": {
           "ipConfigurations": [
@@ -215,29 +351,38 @@
               "name": "ipconfig1",
               "properties": {
                 "privateIPAllocationMethod": "Dynamic",
-                "publicIPAddress": "[if(parameters('licenseManagerPip'), variables('licenseManagerPipId'), json('null'))]",
                 "subnet": {
-                  "id": "[variables('subnetRef')]"
-                }
+                  "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets/', parameters('virtualNetworkName'), parameters('subnetName'))]"
+                },
+                "publicIPAddress": "[if(not(equals(parameters('publicIpNewOrExisting'), 'none')), variables('publicIpAddressId') , json('null'))]"
               }
             }
-          ]
+          ],
+          "networkSecurityGroup": {
+            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+          }
         }
       },
       {
-        "apiVersion": "2022-03-01",
-        "name": "[variables('vmName')]",
         "type": "Microsoft.Compute/virtualMachines",
+        "apiVersion": "2022-03-01",
+        "name": "[parameters('vmName')]",
         "location": "[parameters('location')]",
         "dependsOn": [
-          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+          "[parameters('storageAccountName')]",
+          "[variables('nicName')]"
         ],
+        "plan": {
+          "name": "[variables('imageSku')]",
+          "product": "[variables('imageOffer')]",
+          "publisher": "[variables('imagePublisher')]"
+        },
         "properties": {
           "hardwareProfile": {
-            "vmSize": "[variables('vmSize')]"
+            "vmSize": "[parameters('vmSize')]"
           },
           "osProfile": {
-            "computerName": "[variables('vmName')]",
+            "computerName": "[parameters('vmName')]",
             "adminUsername": "[parameters('linuxUserName')]",
             "adminPassword": "[parameters('linuxPasswordOrKey')]",
             "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
@@ -253,10 +398,7 @@
               "caching": "ReadWrite",
               "createOption": "FromImage",
               "diskSizeGB": 64,
-              "osType": "Linux",
-              "managedDisk": {
-                "storageAccountType": "StandardSSD_LRS"
-              }
+              "osType": "Linux"
             }
           },
           "networkProfile": {
@@ -265,7 +407,13 @@
                 "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
               }
             ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+              "enabled": true,
+              "storageUri": "[reference(resourceId(parameters('storageAccountResourceGroupName'), 'Microsoft.Storage/storageAccounts/', parameters('storageAccountName')), '2018-02-01').primaryEndpoints.blob]"
           }
+        }
         },
         "resources": [
           {
@@ -274,7 +422,7 @@
             "name": "config-app",
             "location": "[parameters('location')]",
             "dependsOn": [
-              "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+              "[parameters('vmName')]"
             ],
             "properties": {
               "publisher": "Microsoft.Azure.Extensions",
@@ -283,15 +431,22 @@
               "autoUpgradeMinorVersion": true,
               "settings": {
                 "fileUris": [
-                  "[uri(parameters('_artifactsLocation'), concat('scripts/configureDynamic.sh', parameters('_artifactsLocationSasToken')))]"
+                  "[uri(parameters('_artifactsLocation'), concat('scripts/configureDynamic.sh', parameters('_artifactsLocationSasToken')))]",
+                  "[uri(parameters('_artifactsLocation'), concat('scripts/splunk-9.0.5-Linux-x86_64.tgz', parameters('_artifactsLocationSasToken')))]"
                 ]
               },
               "protectedSettings": {
-                "commandToExecute": "[concat('sudo bash configureDynamic.sh --splunk-url \"', parameters('splunkBlobUrl') ,'\" --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]"
+                "commandToExecute": "[concat('sudo bash configureDynamic.sh --splunk-user ', parameters('splunkUser'), ' --splunk-password ', parameters('splunkPassword'))]"
               }
             }
           }
         ]
       }
-    ]
+    ],
+    "outputs": {
+      "ssh-command": {
+        "type": "string",
+        "value": "[if(equals(parameters('publicIpNewOrExisting'), 'none'), 'no public ip, vnet access only', concat('ssh ', parameters('linuxUserName'), '@', reference(resourceId(parameters('publicIpResourceGroupName'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName')), '2018-04-01').dnsSettings.fqdn))]"
+      }
+    }
 }
