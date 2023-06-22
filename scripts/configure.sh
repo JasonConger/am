@@ -3,10 +3,8 @@
 # Licensed under the MIT License.
 
 # Set script variables
-#SPLUNKHOME=/opt/splunk
-SPLUNKHOME=/home
-#SPLUNKLOCAL=$SPLUNKHOME/etc/system/local
-SPLUNKLOCAL=$SPLUNKHOME
+SPLUNKHOME=/opt/splunk
+SPLUNKLOCAL=$SPLUNKHOME/etc/system/local
 
 # Parse command-line options
 
@@ -47,23 +45,20 @@ done
 # Print the variables
 echo "SPLUNKUSER = $SPLUNKUSER"
 
-# Create PW hash for writing to config
-#SPLUNKPWHASHED=$($SPLUNKHOME/bin/splunk hash-passwd $SPLUNKPW)
-
-# Replace user and password placeholder tokens in user-seed.conf
-#echo HASHED_PASSWORD = "$SPLUNKPWHASHED" >> $SPLUNKLOCAL/user-seed.conf
-#sed -i "s/##SPLUNKUSER##/$SPLUNKUSER/g" $SPLUNKLOCAL/user-seed.conf
-touch /home/user-seed.conf
-echo "password" >> /home/user-seed.conf
+# Create user-seed.conf
+echo "[user_info]" >> $SPLUNKLOCAL/user-seed.conf
+echo USERNAME = $SPLUNKUSER >> $SPLUNKLOCAL/user-seed.conf
+SPLUNKPWHASHED=$($SPLUNKHOME/bin/splunk hash-passwd $SPLUNKPW)
+echo HASHED_PASSWORD = "$SPLUNKPWHASHED" >> $SPLUNKLOCAL/user-seed.conf
 
 # Create Splunk user
 useradd -m splunk
 
 # Set ownership for Splunk user
-#chown -R splunk:splunk /opt/splunk
+chown -R splunk:splunk /opt/splunk
 
 # Enable boot start with systemd
-#$SPLUNKHOME/bin/splunk enable boot-start -systemd-managed 1 -user splunk --accept-license
+$SPLUNKHOME/bin/splunk enable boot-start -systemd-managed 1 -user splunk --accept-license
 
 #Start Splunk
-#$SPLUNKHOME/bin/splunk start || true
+$SPLUNKHOME/bin/splunk start || true
