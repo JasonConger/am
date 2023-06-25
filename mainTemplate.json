@@ -215,7 +215,7 @@
     "variables": {
       "scenarioPrefix": "splunk-lm-",
       "imagePublisher": "splunk",
-      "imageOffer": "splunk-vm-preview",
+      "imageOffer": "splunk-vm",
       "imageSku": "splunk-on-ubuntu-20-04",
       "imageVersion": "9.0.5",
       "nsgName": "[concat(variables('scenarioPrefix'),'nsg')]",
