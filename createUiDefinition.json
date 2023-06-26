@@ -24,8 +24,7 @@
                 "osPlatform": "Linux",
                 "constraints": {
                     "required": true
-                },
-                "defaultValue": "splunkadmin"
+                }
             },
             {
                 "name": "authenticationType",
@@ -162,10 +161,10 @@
                         "label": "Splunk Admin Username",
                         "defaultValue": "admin",
                         "toolTip": "Splunk user name to use during Splunk install",
-                        "placeholder": "",
-                        "multiLine": false,
                         "constraints": {
-                            "required": true
+                            "required": true,
+                            "regex": "^[a-z0-9A-Z-]{3,}$",
+                            "validationMessage": "The Splunk Admin Username must be at least 3 characters long and contain letters, numbers and hyphens only."
                         },
                         "visible": true
                     },
