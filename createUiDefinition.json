@@ -147,6 +147,34 @@
                 ]
             },
             {
+                "name": "identityDetails",
+                "label": "Managed Identity Details",
+                "subLabel": {
+                  "preValidation": "Required",
+                  "postValidation": "Done"
+                },
+                "bladeTitle": "Managed Identity Details",
+                "elements": [
+                  {
+                    "name": "identity",
+                    "type": "Microsoft.ManagedIdentity.IdentitySelector",
+                    "label": "Managed Identity Configuration",
+                    "toolTip": {
+                      "systemAssignedIdentity": "Enable system assigned identity to grant the resource access to other existing resources.",
+                      "userAssignedIdentity": "Add user assigned identities to grant the resource access to other existing resources."
+                    },
+                    "defaultValue": {
+                      "systemAssignedIdentity": "On"
+                    },
+                    "options": {
+                      "hideSystemAssignedIdentity": false,
+                      "hideUserAssignedIdentity": false
+                    },
+                    "visible": true
+                  }
+                ]
+            },
+            {
                 "name": "SplunkConfig",
                 "label": "Splunk Configuration",
                 "subLabel": {
@@ -197,6 +225,7 @@
             "linuxUsername": "[basics('linuxUsername')]",
             "authenticationType": "[basics('authenticationType').authenticationType]",
             "linuxPasswordOrKey": "[coalesce(basics('authenticationType').password, basics('authenticationType').sshPublicKey)]",
+            "managedIdentity": "[steps('identityDetails').identity]",
 
             "vmSize": "[steps('VirtualMachineConfig').vmSize]",
             "storageNewOrExisting": "[steps('VirtualMachineConfig').storageAccount.newOrExisting]",
