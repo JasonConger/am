@@ -189,7 +189,7 @@
             "vmSize": "[steps('deploymentDetails').vmSize]",
             "virtualNetworkNewOrExisting": "[steps('deploymentDetails').virtualNetwork.newOrExisting]",
             "virtualNetworkName": "[steps('deploymentDetails').virtualNetwork.name]",
-            "virtualNetworkAddressPrefix": "[steps('deploymentDetails').virtualNetwork.addressPrefixes]",
+            "virtualNetworkAddressPrefix": "[first(steps('deploymentDetails').virtualNetwork.addressPrefixes)]",
             "subnetName": "[steps('deploymentDetails').virtualNetwork.subnets.subnet1.name]",
             "subnetPrefix": "[steps('deploymentDetails').virtualNetwork.subnets.subnet1.addressPrefix]",
             "virtualNetworkResourceGroup": "[steps('deploymentDetails').virtualNetwork.resourceGroup]",
