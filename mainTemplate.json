@@ -112,7 +112,7 @@
         }
     },
     "variables": {
-      "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'sasplunklmvm')]",
+      "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'lmvm')]",
       "publicIPAddressName": "[concat(uniqueString(resourceGroup().id),'IP')]",
       "scenarioPrefix": "splunk-lm-",
       "imagePublisher": "splunk",
