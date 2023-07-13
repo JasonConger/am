@@ -183,7 +183,7 @@
             "location": "[location()]",
             "vmName": "[steps('deploymentDetails').virtualMachine.vmName]",
             "linuxUsername": "[steps('deploymentDetails').linuxUsername]",
-            "authenticationType": "[steps('deploymentDetails').authenticationType]",
+            "authenticationType": "[steps('deploymentDetails').authenticationType.authenticationType]",
             "linuxPasswordOrKey": "[coalesce(steps('deploymentDetails').authenticationType.password, steps('deploymentDetails').authenticationType.sshPublicKey)]",
             "managedIdentity": "[steps('identityDetails').identity]",
             "vmSize": "[steps('deploymentDetails').vmSize]",
